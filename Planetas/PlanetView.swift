@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct PlanetView: View {
-    
-    @EnvironmentObject private var alertModel: AlertControllerModel
-    
     let planet: Planet
-    @ObservedObject var model: PlanetsViewModel
+    var model: PlanetsViewModel
+    
+    @State private var isShowingAlert = false
     
     var body: some View {
         ScrollView {
@@ -24,29 +23,33 @@ struct PlanetView: View {
                     .padding(.horizontal, 32)
                 VStack(spacing: 12) {
                     Text(planet.name)
-                        .font(.largeTitle)
+                        .font(.largeTitle.bold())
                         .multilineTextAlignment(.center)
                     Text(planet.description)
                         .font(.body)
                         .multilineTextAlignment(.center)
                 }
-                Button("Show Alert", action: showAlert)
+                Button("Mostrar alerta", systemImage: "info.circle", action: showAlert)
+                Button("Deseleccionar", systemImage: "xmark.circle", action: unselectPlanet)
             }
             .padding(32)
         }
-        .navigationTitle(planet.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .alert(planet.name, isPresented: $isShowingAlert) {
+            Button("OK", role: .cancel, action: {})
+        } message: {
+            Text(planet.description)
+        }
     }
     
     func showAlert() {
-        alertModel.addAlert(.message(t: planet.name, m: planet.description))
+        isShowingAlert = true
+    }
+    
+    func unselectPlanet() {
+        model.selectedPlanet = nil
     }
 }
 
-struct PlanetView_Previews: PreviewProvider {
-    static var previews: some View {
-        AlertController {
-            PlanetView(planet: planetList[0], model: .init())
-        }
-    }
+#Preview {
+    PlanetView(planet: planetList[2], model: .init())
 }

@@ -8,13 +8,12 @@
 import Foundation
 import Combine
 
-class PlanetsViewModel: ObservableObject {
+@Observable
+class PlanetsViewModel {
+    var planets: Result<[Planet], Error>? = .success(planetList)
+    var selectedPlanet: Planet? = nil
     
-    @Published var isLoading = false
-    @Published var planets = [Planet]()
-    
-    func downloadPlanets() async throws {
-        isLoading = true
+    func downloadPlanets() async {
         do {
             /*
             // Real request
@@ -27,22 +26,10 @@ class PlanetsViewModel: ObservableObject {
             
             // Simulate request
             try await Task.sleep(for: .seconds(1))
-            
-            isLoading = false
-            planets = planetList
+            self.planets = .success(planetList)
             
         } catch {
-            isLoading = false
-            print("PlanetsViewModel Error:", error.localizedDescription)
-            throw error
+            self.planets = .failure(error)
         }
     }
-    
 }
-
-let planetList = [
-    Planet(name: "Mercury", description: "First planet of the solar system."),
-    Planet(name: "Venus", description: "Second planet of the solar system."),
-    Planet(name: "Earth", description: "Third planet of the solar system."),
-    Planet(name: "Mars", description: "Fourth planet of the solar system."),
-]

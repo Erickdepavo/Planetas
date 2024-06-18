@@ -8,62 +8,61 @@
 import SwiftUI
 
 struct PlanetsView: View {
-    
-    @StateObject private var model = PlanetsViewModel()
+    @State private var model = PlanetsViewModel()
+    @ScaledMetric private var planetSize = 48
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                if model.isLoading && model.planets.isEmpty {
-                    ProgressView()
-                        .padding(32)
-                        .controlSize(.large)
-                } else {
-                    ForEach(model.planets) { planet in
+        NavigationSplitView {
+            Group {
+                switch model.planets {
+                case nil:
+                    ProgressView("Obteniendo...")
+                        .frame(maxWidth: .infinity)
+                    
+                case .success(let planets):
+                    List(planets, selection: $model.selectedPlanet) { planet in
                         NavigationLink(value: planet) {
-                            HStack(spacing: 32) {
+                            HStack(spacing: 12) {
                                 Image(planet.name)
                                     .resizable()
                                     .aspectRatio(1, contentMode: .fit)
-                                    .frame(height: 120)
+                                    .frame(height: planetSize)
                                 Text(planet.name)
-                                    .font(.title.bold())
-                                    .multilineTextAlignment(.leading)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .font(.title3)
                             }
-                            .padding()
-                            .background(Material.regular, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                         }
-                        .buttonStyle(.plain)
+                        .listRowSeparator(.hidden)
                     }
+                    .listStyle(.inset)
+                    .refreshable {
+                        await model.downloadPlanets()
+                    }
+                    
+                case .failure(let error):
+                    Text(error.localizedDescription)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding()
-        }
-        .navigationTitle("Planetas")
-        .navigationDestination(for: Planet.self) { planet in
-            PlanetView(planet: planet, model: model)
-        }
-        .onAppear(perform: downloadPlanets)
-    }
-    
-    func downloadPlanets() {
-        Task {
-            do {
-                try await model.downloadPlanets()
-            } catch {
-                
+            .task {
+                await model.downloadPlanets()
+            }
+            .navigationTitle("Planetas")
+        } detail: {
+            NavigationStack {
+                if let selectedPlanet = model.selectedPlanet {
+                    PlanetView(planet: selectedPlanet, model: model)
+                        .navigationTitle(selectedPlanet.name)
+                        .navigationBarTitleDisplayMode(.inline)
+                } else {
+                    Text("Ningún planeta seleccionado")
+                        .font(.title2.bold())
+                        .foregroundStyle(.secondary)
+                }                
             }
         }
     }
 }
 
-struct PlanetsView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationSplitView {
-            PlanetsView()
-        } detail: {
-            Text("Planetas")
-        }
-    }
+#Preview {
+    PlanetsView()
 }
