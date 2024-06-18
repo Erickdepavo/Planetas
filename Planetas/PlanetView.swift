@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PlanetView: View {
-    let planet: Planet
+    @Bindable var planet: Planet
     var model: PlanetsViewModel
     
     @State private var isShowingAlert = false
@@ -25,9 +25,10 @@ struct PlanetView: View {
                     Text(planet.name)
                         .font(.largeTitle.bold())
                         .multilineTextAlignment(.center)
-                    Text(planet.description)
+                    TextField("Descripción del planeta", text: $planet.description, axis: .vertical)
                         .font(.body)
                         .multilineTextAlignment(.center)
+                        .lineLimit(nil)
                 }
                 Button("Mostrar alerta", systemImage: "info.circle", action: showAlert)
                 Button("Deseleccionar", systemImage: "xmark.circle", action: unselectPlanet)
